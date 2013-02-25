@@ -29,7 +29,7 @@ module Fluent
       @float.each {|key|
         next if !record.has_key?(key) || record[key].empty?
         begin
-          value = Flaot record[key]
+          value = Float record[key]
         rescue ArgumentError => e
           puts e; next
         end
