@@ -18,24 +18,24 @@ module Fluent
     def parse_line(line)
       time, record = @parser.parse(line)
       @int.each {|key|
-        next if !record.has_key?(key) || record[key].empty?
-        begin
-          value = Integer record[key]
-        rescue ArgumentError => e
-          puts e; next
-        end
-        record[key] = value
+        next unless record.has_key?(key)
+        record[key] = cast_value(record, key, :Integer)
       }
       @float.each {|key|
-        next if !record.has_key?(key) || record[key].empty?
-        begin
-          value = Float record[key]
-        rescue ArgumentError => e
-          puts e; next
-        end
-        record[key] = value
+        next unless record.has_key?(key)
+        record[key] = cast_value(record, key, :Float)
       }
       return time, record
+    end
+
+    def cast_value(record, key, klass)
+      return record[key] if record[key].empty?
+      begin
+        return Object.send(klass, record[key])
+      rescue ArgumentError => e
+        puts e
+        return record[key]
+      end
     end
   end
 end
