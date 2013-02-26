@@ -29,7 +29,7 @@ module Fluent
     end
 
     def cast_value(record, key, klass)
-      return record[key] if record[key].empty?
+      return record[key] if record[key].nil? || record[key].empty?
       begin
         return Object.send(klass, record[key])
       rescue ArgumentError => e
