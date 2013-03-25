@@ -1,41 +1,36 @@
-module Fluent
+class TailInputExtend < TailInput
+  Fluent::Plugin.register_input('tail_ex', self)
 
-  require 'fluent/plugin/in_tail'
+  config_param :int, :string, :default => ""
+  config_param :float, :string, :default => ""
 
-  class TailInputExtend < TailInput
-    Plugin.register_input('tail_ex', self)
+  def configure(conf)
+    super
 
-    config_param :int, :string, :default => ""
-    config_param :float, :string, :default => ""
+    @int = @int.split(',').map {|key| key.strip}
+    @float = @float.split(',').map {|key| key.strip}
+  end
 
-    def configure(conf)
-      super
+  def parse_line(line)
+    time, record = @parser.parse(line)
+    @int.each {|key|
+      next unless record.has_key?(key)
+      record[key] = cast_value(record, key, :Integer)
+    }
+    @float.each {|key|
+      next unless record.has_key?(key)
+      record[key] = cast_value(record, key, :Float)
+    }
+    return time, record
+  end
 
-      @int = @int.split(',').map {|key| key.strip}
-      @float = @float.split(',').map {|key| key.strip}
-    end
-
-    def parse_line(line)
-      time, record = @parser.parse(line)
-      @int.each {|key|
-        next unless record.has_key?(key)
-        record[key] = cast_value(record, key, :Integer)
-      }
-      @float.each {|key|
-        next unless record.has_key?(key)
-        record[key] = cast_value(record, key, :Float)
-      }
-      return time, record
-    end
-
-    def cast_value(record, key, klass)
-      return record[key] if record[key].nil? || record[key].empty?
-      begin
-        return Object.send(klass, record[key])
-      rescue ArgumentError => e
-        puts e
-        return record[key]
-      end
+  def cast_value(record, key, klass)
+    return record[key] if record[key].nil? || record[key].empty?
+    begin
+      return Object.send(klass, record[key])
+    rescue ArgumentError => e
+      $log.error $!.to_s
+      return record[key]
     end
   end
 end
